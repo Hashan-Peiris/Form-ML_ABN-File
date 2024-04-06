@@ -37,12 +37,22 @@ def read_outcar(filename):
 
     # Finding and extracting forces data
     forces_section_start = content.index(re.search(r"POSITION\s+TOTAL-FORCE \(eV/Angst\)", content).group(0))
-    forces_section_end = content.index("-----------------------------------------------------------------------------------", forces_section_start)
-    forces_section = content[forces_section_start:forces_section_end].split("\n")[1:]  # Skip the first line
+    content_lines = content[forces_section_start:].split("\n")
+    end_line_keyword = "total drift:"
+    forces_section_end = next(i for i, line in enumerate(content_lines[2:]) if end_line_keyword in line.strip())
+
+    forces_section = content_lines[2:forces_section_end+1]  # Start from 2 to skip the two lines
     forces_data = []
     for line in forces_section:
+        if not line.strip():  # Added this line
+            continue          # And this one
         line_data = list(map(float, line.split()[3:6]))  # Get data from positions 3 to 5 (Force X, Y, Z)
         forces_data.append(line_data)
+    
+    print(f"Forces in file {filename}:")
+    print(forces_data[:2])  # First two lines of forces
+    print(forces_data[-2:])  # Last two lines of forces
+    print("------")
     
     # Finding and extracting energy data
     energy_line = re.search(r"energy\(sigma->0\) =(.*?)\n", content).group(1)
@@ -80,8 +90,10 @@ def form_ml_abn_file(header_data, config_data):
         config_texts.append(f" Total energy (eV)\n{config['energy_data']}")
         config_texts.append(" Forces (eV ang.^-1)")
         for force in config['force_data']:
-            config_texts.append(" Forces (eV ang.^-1)\n" + "\n".join(" ".join(map(str, line)) for line in force)) # For each atom, joining X, Y, and Z forces
-        config_texts.append(f" Stress (kbar)\n{' '.join(map(str, config['stress_data']))}")  # Joining each stress data value
+            config_texts.append(f"  {' '.join(map(str, force))}")
+        config_texts.append(f" Stress (kbar)\n{' '.join(map(str, config['stress_data'][:3]))}")  # Joining first three stress data values
+        config_texts.append(f"{' '.join(map(str, config['stress_data'][3:]))}")  # Joining last three stress data values
+
 
     # Joining the header and formatted configs
     ml_abn_content = "\n".join([version_text, num_configs_text, max_num_atoms_text, max_num_atomtypes_text, atomtypes_text] + config_texts)
