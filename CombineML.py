@@ -75,12 +75,12 @@ def form_ml_abn_file(header_data, config_data):
             config_texts.append(f" {element} {config['elements_data'].count(element)}")  # Number of each type of atom
         #CTIFOR value will be ignored and not written
         #config_texts.append(" CTIFOR (optional)\n100")  
-        config_texts.append(f" Primitive lattice vectors (ang.)\n{' '.join(map(str, config['force_data']))}")  # Joining X, Y, and Z forces
-        config_texts.append(f" Atomic positions (ang.)\n{' '.join(map(str, config['positional_data']))}")  # Joining X, Y, and Z positional data
+        config_texts.append(" Primitive lattice vectors (ang.)\n" + "\n".join(" ".join(map(str, line)) for line in config['cell_vectors']))
+        config_texts.append(" Atomic positions (ang.)\n" + "\n".join(" ".join(map(str, line)) for line in config['positional_data']))
         config_texts.append(f" Total energy (eV)\n{config['energy_data']}")
         config_texts.append(" Forces (eV ang.^-1)")
         for force in config['force_data']:
-            config_texts.append(f" {' '.join(map(str, force))}")  # For each atom, joining X, Y, and Z forces
+            config_texts.append(" Forces (eV ang.^-1)\n" + "\n".join(" ".join(map(str, line)) for line in force)) # For each atom, joining X, Y, and Z forces
         config_texts.append(f" Stress (kbar)\n{' '.join(map(str, config['stress_data']))}")  # Joining each stress data value
 
     # Joining the header and formatted configs
