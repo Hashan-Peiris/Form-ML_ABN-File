@@ -72,8 +72,7 @@ def form_ml_abn_file(header_data, config_data):
     max_num_atomtypes_text = f" The maximum number of atom type\n{header_data['max_num_atomtypes']}\n"
     atomtypes_text = f" The atom types in the data file\n{' '.join(header_data['atomtypes'])}\n"
     max_num_atoms_text = f" The maximum number of atoms per system\n{header_data['max_num_atoms']}\n"
-    max_atoms_per_atomtype_text = f" The maximum number of atoms per atom type\n{header_data['max_atoms_per_atomtype']}\n"
-    
+
     # Formatting configs
     config_texts = []
     for i, config in enumerate(config_data, start=1):   # Numbering starts from 1
@@ -96,14 +95,8 @@ def form_ml_abn_file(header_data, config_data):
         config_texts.append(f"{' '.join(map(str, config['stress_data'][3:]))}")  # Joining last three stress data values
 
 
-    ref_atomic_energy_text = " Reference atomic energy (eV)\n-72.5297190000000  -35.4081430000000 -2.39269120000000\n  -4.60003440000000  -1.12020270000000\n"  # To be replaced by actual calculation
-    atomic_masses = {'Au': 197.0}  # Placeholder dictionary, replace with actual atomic masses
-    atomic_mass_text = " Atomic mass\n" + "\n".join(f" {mass}" for mass in atomic_masses.values()) + "\n"
-
     # Joining the header and formatted configs
-    ml_abn_content = "\n".join([version_text, num_configs_text, max_num_atomtypes_text, atomtypes_text, max_num_atoms_text,
-                                max_atoms_per_atomtype_text, ref_atomic_energy_text, atomic_mass_text] + config_texts)
-
+    ml_abn_content = "\n".join([version_text, num_configs_text, max_num_atomtypes_text, max_num_atoms_text,  atomtypes_text] + config_texts)
     
     return ml_abn_content 
 
@@ -126,7 +119,6 @@ def main():
     max_num_atoms = -float("inf")
     max_num_atomtypes = -float("inf")
     atomtypes = set()
-    max_atoms_per_type = {}
 
 # Process each POSCAR and OUTCAR file pair
     for poscar_file, outcar_file in zip(poscar_files, outcar_files):
@@ -140,12 +132,6 @@ def main():
         
         # Add new atom types to the set
         atomtypes.update(elements_data)
-        element_counts = {element: elements_data.count(element) for element in set(elements_data)}
-        for element, count in element_counts.items():
-            if element not in max_atoms_per_type:
-                max_atoms_per_type[element] = count
-            else:
-                max_atoms_per_type[element] = max(max_atoms_per_type[element], count)
 
         # Gathering the data into a single configuration data
         config_data.append({
@@ -166,7 +152,6 @@ def main():
         header_data['max_num_atoms'] = max_num_atoms
         header_data['max_num_atomtypes'] = max_num_atomtypes
         header_data['atomtypes'] = list(atomtypes)
-        header_data['max_atoms_per_atomtype'] = max(max_atoms_per_type.values())
 
     # Form the ML_ABN file content
     ml_abn_content = form_ml_abn_file(header_data, config_data)

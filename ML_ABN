@@ -3,14 +3,24 @@
  The number of configurations
 2
 
- The maximum number of atoms per system
-1
-
  The maximum number of atom type
 1
 
  The atom types in the data file
 Au
+
+ The maximum number of atoms per system
+1
+
+ The maximum number of atoms per atom type
+1
+
+ Reference atomic energy (eV)
+-72.5297190000000  -35.4081430000000 -2.39269120000000
+  -4.60003440000000  -1.12020270000000
+
+ Atomic mass
+ 197.0
 
  Configuration num. 1
  System name
