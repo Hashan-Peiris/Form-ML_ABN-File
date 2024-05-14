@@ -50,7 +50,7 @@ def form_ml_abn_file(header_data, config_data):
     max_num_atomtypes_text = f"The maximum number of atom type\n{dash_line}\n{header_data['max_num_atomtypes']}\n{star_line}"
     atomtypes_text = f"The atom types in the data file\n{dash_line}\n{' '.join(header_data['atomtypes'])}\n{star_line}"
     max_num_atoms_text = f"The maximum number of atoms per system\n{dash_line}\n{header_data['max_num_atoms']}\n{star_line}"
-    max_atoms_per_atomtype_text = f"The maximum number of atoms per atom type\n{dash_line}\n" + "\n".join(f"{atom} {max_cnt}" for atom, max_cnt in header_data['max_atoms_per_atomtype'].items()) + f"\n{star_line}"
+    max_atoms_per_atomtype_text = f"The maximum number of atoms per atom type\n{dash_line}\n" + "\n".join(f"{max_cnt}" for max_cnt in header_data['max_atoms_per_atomtype'].values()) + f"\n{star_line}"
     
     config_texts = []
     for i, config in enumerate(config_data, start=1):
@@ -61,7 +61,6 @@ def form_ml_abn_file(header_data, config_data):
         config_texts.append(f"The number of atoms\n{dash_line}\n{sum(config['num_atoms'])}\n{star_line}")
         config_texts.append(f'Atom types and atom numbers\n{dash_line}')
         
-        # Calculate element counts based on elements_data and num_atoms
         element_counts = {}
         for element, count in zip(config['elements_data'], config['num_atoms']):
             if element in element_counts:
@@ -69,7 +68,6 @@ def form_ml_abn_file(header_data, config_data):
             else:
                 element_counts[element] = count
 
-        # Append the element counts to the configuration text
         for element, count in element_counts.items():
             config_texts.append(f" {element} {count}")
         
