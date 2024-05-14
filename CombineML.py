@@ -1,6 +1,10 @@
 import glob
 import re
 
+star_line = "**************************************************"
+dash_line = "--------------------------------------------------"
+eq_line   = "=================================================="
+
 def read_poscar(filename):
     # Reading the POSCAR file
     with open(filename, "r") as file:
@@ -67,44 +71,46 @@ def read_outcar(filename):
 # Placeholder function to form ML_ABN file lines
 def form_ml_abn_file(header_data, config_data):
     # Formatting the header
-    version_text = " 1.0 Version\n"
-    num_configs_text = f" The number of configurations\n{header_data['num_configs']}\n"
-    max_num_atomtypes_text = f" The maximum number of atom type\n{header_data['max_num_atomtypes']}\n"
-    atomtypes_text = f" The atom types in the data file\n{' '.join(header_data['atomtypes'])}\n"
-    max_num_atoms_text = f" The maximum number of atoms per system\n{header_data['max_num_atoms']}\n"
-    max_atoms_per_atomtype_text = f" The maximum number of atoms per atom type\n{header_data['max_atoms_per_atomtype']}\n"
+    version_text = f"1.0 Version\n{star_line}"
+    num_configs_text = f"The number of configurations\n{dash_line}\n{header_data['num_configs']}\n{star_line}"
+    max_num_atomtypes_text = f"The maximum number of atom type\n{dash_line}\n{header_data['max_num_atomtypes']}\n{star_line}"
+    atomtypes_text = f"The atom types in the data file\n{dash_line}\n{' '.join(header_data['atomtypes'])}\n{star_line}"
+    max_num_atoms_text = f"The maximum number of atoms per system\n{dash_line}\n{header_data['max_num_atoms']}\n{star_line}"
+    max_atoms_per_atomtype_text = f"The maximum number of atoms per atom type\n{dash_line}\n{header_data['max_atoms_per_atomtype']}\n{star_line}"
     
     # Formatting configs
     config_texts = []
     for i, config in enumerate(config_data, start=1):   # Numbering starts from 1
-        config_texts.append(f" Configuration num. {i}")
-        config_texts.append(' System name\nSystem')  # Not sure what the System Name should be
-        config_texts.append(f" The number of atom types\n{len(set(config['elements_data']))}")  # Assuming elements data contains actual element names
-        config_texts.append(f" The number of atoms\n{len(config['elements_data'])}")  # Assuming elements data contains actual element names
-        config_texts.append(' Atom types and atom numbers')
+        config_texts.append(f"Configuration num. {i}")
+        config_texts.append(f"{eq_line}")
+        config_texts.append(f'System name\n{dash_line}\nSystem\n{eq_line}')  # Not sure what the System Name should be
+        config_texts.append(f"The number of atom types\n{dash_line}\n{len(set(config['elements_data']))}\n{eq_line}")  # Assuming elements data contains actual element names
+        config_texts.append(f"The number of atoms\n{dash_line}\n{len(config['elements_data'])}\n{star_line}")  # Assuming elements data contains actual element names
+        config_texts.append(f'Atom types and atom numbers\n{dash_line}')
         for element in set(config['elements_data']):
             config_texts.append(f" {element} {config['elements_data'].count(element)}")  # Number of each type of atom
         #CTIFOR value will be ignored and not written
         #config_texts.append(" CTIFOR (optional)\n100")  
-        config_texts.append(" Primitive lattice vectors (ang.)\n" + "\n".join(" ".join(map(str, line)) for line in config['cell_vectors']))
-        config_texts.append(" Atomic positions (ang.)\n" + "\n".join(" ".join(map(str, line)) for line in config['positional_data']))
-        config_texts.append(f" Total energy (eV)\n{config['energy_data']}")
-        config_texts.append(" Forces (eV ang.^-1)")
+        config_texts.append(f"{eq_line}\nPrimitive lattice vectors (ang.)\n{dash_line}\n" + "\n".join(" ".join(map(str, line)) for line in config['cell_vectors']) + f"\n{eq_line}")
+        config_texts.append(f"Atomic positions (ang.)\n{dash_line}\n" + "\n".join(" ".join(map(str, line)) for line in config['positional_data']) + f"\n{eq_line}")
+        config_texts.append(f"Total energy (eV)\n{dash_line}\n{config['energy_data']}\n{eq_line}")
+        config_texts.append(f"Forces (eV ang.^-1)\n{dash_line}")
         for force in config['force_data']:
             config_texts.append(f"  {' '.join(map(str, force))}")
-        config_texts.append(f" Stress (kbar)\n{' '.join(map(str, config['stress_data'][:3]))}")  # Joining first three stress data values
-        config_texts.append(f"{' '.join(map(str, config['stress_data'][3:]))}")  # Joining last three stress data values
+        config_texts.append(f"{eq_line}\nStress (kbar)\n{dash_line}\nXX YY ZZ \n{dash_line} \n {' '.join(map(str, config['stress_data'][:3]))} \n{dash_line}")  # Joining first three stress data values
+        config_texts.append(f"XY YZ ZX \n{dash_line} \n{' '.join(map(str, config['stress_data'][3:]))} \n{star_line}")  # Joining last three stress data values
 
 
-    ref_atomic_energy_text = " Reference atomic energy (eV)\n-72.5297190000000  -35.4081430000000 -2.39269120000000\n  -4.60003440000000  -1.12020270000000\n"  # To be replaced by actual calculation
+    ref_atomic_energy_text = f"Reference atomic energy (eV)\n{dash_line}\n0.0\n{star_line}"  # To be replaced by actual calculation
     atomic_masses = {'Au': 197.0}  # Placeholder dictionary, replace with actual atomic masses
-    atomic_mass_text = " Atomic mass\n" + "\n".join(f" {mass}" for mass in atomic_masses.values()) + "\n"
+    atomic_mass_text = f"Atomic mass\n{dash_line}\n" + "\n".join(f" {mass}" for mass in atomic_masses.values()) + f"\n{star_line}"
+    basis_sets = f"The numbers of basis sets per atom type \n{dash_line}\n" + f"1" + f"\n{star_line}"
+    basis_set_num = f"Basis set for Au \n{dash_line}\n" + f"1 1" + f"\n{star_line}"
 
     # Joining the header and formatted configs
     ml_abn_content = "\n".join([version_text, num_configs_text, max_num_atomtypes_text, atomtypes_text, max_num_atoms_text,
-                                max_atoms_per_atomtype_text, ref_atomic_energy_text, atomic_mass_text] + config_texts)
+                                max_atoms_per_atomtype_text, ref_atomic_energy_text, atomic_mass_text, basis_sets, basis_set_num] + config_texts)
 
-    
     return ml_abn_content 
 
 def main():
