@@ -50,7 +50,7 @@ def form_ml_abn_file(header_data, config_data):
     max_num_atomtypes_text = f"The maximum number of atom type\n{dash_line}\n{header_data['max_num_atomtypes']}\n{star_line}"
     atomtypes_text = f"The atom types in the data file\n{dash_line}\n{' '.join(header_data['atomtypes'])}\n{star_line}"
     max_num_atoms_text = f"The maximum number of atoms per system\n{dash_line}\n{header_data['max_num_atoms']}\n{star_line}"
-    max_atoms_per_atomtype_text = f"The maximum number of atoms per atom type\n{dash_line}\n{header_data['max_atoms_per_atomtype']}\n{star_line}"
+    max_atoms_per_atomtype_text = f"The maximum number of atoms per atom type\n{dash_line}\n" + "\n".join(f"{atom} {max_cnt}" for atom, max_cnt in header_data['max_atoms_per_atomtype'].items()) + f"\n{star_line}"
     
     config_texts = []
     for i, config in enumerate(config_data, start=1):
@@ -60,8 +60,19 @@ def form_ml_abn_file(header_data, config_data):
         config_texts.append(f"The number of atom types\n{dash_line}\n{len(set(config['elements_data']))}\n{eq_line}")
         config_texts.append(f"The number of atoms\n{dash_line}\n{sum(config['num_atoms'])}\n{star_line}")
         config_texts.append(f'Atom types and atom numbers\n{dash_line}')
-        for element in set(config['elements_data']):
-            config_texts.append(f" {element} {config['elements_data'].count(element)}")
+        
+        # Calculate element counts based on elements_data and num_atoms
+        element_counts = {}
+        for element, count in zip(config['elements_data'], config['num_atoms']):
+            if element in element_counts:
+                element_counts[element] += count
+            else:
+                element_counts[element] = count
+
+        # Append the element counts to the configuration text
+        for element, count in element_counts.items():
+            config_texts.append(f" {element} {count}")
+        
         config_texts.append(f"{eq_line}\nPrimitive lattice vectors (ang.)\n{dash_line}\n" + "\n".join(" ".join(map(str, line)) for line in config['cell_vectors']) + f"\n{eq_line}")
         config_texts.append(f"Atomic positions (ang.)\n{dash_line}\n" + "\n".join(" ".join(map(str, line)) for line in config['positional_data']) + f"\n{eq_line}")
         config_texts.append(f"Total energy (eV)\n{dash_line}\n{config['energy_data']}\n{eq_line}")
@@ -104,13 +115,13 @@ def main():
         max_num_atoms = max(max_num_atoms, sum(num_atoms))
         max_num_atomtypes = max(max_num_atomtypes, len(set(elements_data)))
         atomtypes.update(elements_data)
-        element_counts = {element: elements_data.count(element) for element in set(elements_data)}
-        for element, count in element_counts.items():
+        
+        for element, count in zip(elements_data, num_atoms):
             if element not in max_atoms_per_type:
                 max_atoms_per_type[element] = count
             else:
                 max_atoms_per_type[element] = max(max_atoms_per_type[element], count)
-
+        
         config_data.append({
             'comment': comment,
             'scale': scale,
@@ -128,7 +139,7 @@ def main():
     header_data['max_num_atoms'] = max_num_atoms
     header_data['max_num_atomtypes'] = max_num_atomtypes
     header_data['atomtypes'] = list(atomtypes)
-    header_data['max_atoms_per_atomtype'] = max(max_atoms_per_type.values())
+    header_data['max_atoms_per_atomtype'] = max_atoms_per_type
 
     ml_abn_content = form_ml_abn_file(header_data, config_data)
 
