@@ -1,0 +1,1 @@
+You can use the script to form the ML_ABN file to be used in a ML activated VASP calculation to compile a set of POSCARS gathered from single point calculations (needs OUTCAR files for the energy and stress data). 
